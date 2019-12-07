@@ -19,21 +19,22 @@ ANDROID_SDK_CMAKE="$ANDROID_SDK/cmake/3.6.4111459/bin/cmake"
 ANDROID_NDK_TOOLCHAIN_CMAKE=$ANDROID_NDK/build/cmake/android.toolchain.cmake
 SCRIPT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
-PB_VERSION="v3.7.0"
-rm -rf $SCRIPT_DIR/protobuf-$PB_VERSION
-git clone -b $PB_VERSION --recurse-submodules -j8 https://github.com/protocolbuffers/protobuf.git $SCRIPT_DIR/protobuf-$PB_VERSION
+echo "git submodule update --init --recursive"
+git submodule update --init --recursive
 
 if [[ $? -ne 0 ]]; then
     echo "git clone failed"
     exit 1
 fi
 
-ANDROID_ABI=arm64-v8a
+ANDROID_ABI=x86
 ANDROID_API_LEVEL=16
 
 rm -rf build
 mkdir build
 cd build
+
+echo "$ANDROID_SDK_CMAKE:"
 
 $ANDROID_SDK_CMAKE \
     -Dprotobuf_BUILD_SHARED_LIBS=false \
@@ -47,14 +48,16 @@ $ANDROID_SDK_CMAKE \
     -DANDROID_STL=c++_shared \
     -DANDROID_LINKER_FLAGS="-landroid -llog" \
     -DANDROID_CPP_FEATURES="rtti exceptions" \
-    $SCRIPT_DIR/protobuf-$PB_VERSION/cmake
+    $SCRIPT_DIR/protobuf-v3.7.0/cmake
 
 if [[ $? -ne 0 ]]; then
     echo "android_cmake config failed"
     exit 1
 fi
 
-$ANDROID_SDK_CMAKE --build .
+echo "make build ..."
+# $ANDROID_SDK_CMAKE --build .
+make -j8
 
 if [[ $? -ne 0 ]]; then
     echo "build failed"
